@@ -1,9 +1,6 @@
 package org.example;
 
-import org.pcap4j.core.PcapNetworkInterface;
-import org.pcap4j.core.Pcaps;
-import org.pcap4j.core.PcapHandle;
-import org.pcap4j.core.PcapNetworkInterface.PromiscuousMode;
+import org.pcap4j.core.*;
 import org.pcap4j.packet.Packet;
 import org.pcap4j.packet.IpV4Packet;
 
@@ -11,40 +8,38 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.net.Inet4Address;
+import java.io.IOException;
 import java.net.InetAddress;
 
 public class Main {
-    public static void main(String[] args) throws Exception {
+
+    public static void main(String[] args) {
 
         JFrame frame = new JFrame("PCAP4J Packet Tool");
-        frame.setSize(400, 400);
-        frame.setLayout(null); // Set layout to null for absolute positioning
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Ensure the application exits on close
-
+        frame.setSize(600, 400);
+        frame.setLayout(null);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
         JTextField textField = new JTextField();
         textField.setBounds(50, 50, 150, 30);
         frame.add(textField);
 
-
         JTextArea packetDisplay = new JTextArea();
-        packetDisplay.setBounds(50, 100, 500, 400);
         packetDisplay.setEditable(false);
-        frame.add(packetDisplay);
-
-
-
+        JScrollPane scrollPane = new JScrollPane(packetDisplay);
+        scrollPane.setBounds(50, 100, 500, 200);
+        frame.add(scrollPane);
 
         JButton enter = new JButton("Enter Interface IP");
-        enter.setBounds(210, 50, 100, 30);
+        enter.setBounds(210, 50, 150, 30);
         frame.add(enter);
+
+        frame.setVisible(true);
 
         enter.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 String ipOfInterface = textField.getText();
-                System.out.println("Entered IP: " + ipOfInterface);
 
                 try {
                     InetAddress addr = InetAddress.getByName(ipOfInterface);
@@ -52,42 +47,54 @@ public class Main {
 
                     if (nif != null) {
                         System.out.println("Interface is valid! :D");
-                        frame.setBackground(Color.GREEN);
+                        frame.getContentPane().setBackground(Color.GREEN);
+                        
+                        new Thread(() -> {
+                            try {
+                                int snapLen = 65536;
+                                PcapNetworkInterface.PromiscuousMode mode = PcapNetworkInterface.PromiscuousMode.PROMISCUOUS;
+                                int timeout = 10;
+                                PcapHandle handle = nif.openLive(snapLen, mode, timeout);
 
+                                while (true) {
+                                    try {
+                                        Packet packet = handle.getNextPacketEx();
 
-                        // part that analyzes network packets
-                        try {
-                            int snapLen = 65536; // Capture the maximum number of bytes per packet
-                            PromiscuousMode mode = PromiscuousMode.PROMISCUOUS; // Capture all packets
-                            int timeout = 10; // Timeout in milliseconds
-                            PcapHandle handle = nif.openLive(snapLen, mode, timeout);
+                                        SwingUtilities.invokeLater(() -> {
+                                            if (packet.contains(IpV4Packet.class)) {
+                                                IpV4Packet ipV4Packet = packet.get(IpV4Packet.class);
+                                                InetAddress srcAddr = ipV4Packet.getHeader().getSrcAddr();
+                                                InetAddress dstAddr = ipV4Packet.getHeader().getDstAddr();
 
-                            Packet packet = handle.getNextPacketEx();
-                            handle.close();
-
-                            // Check if the packet is an IPv4 packet
-                            IpV4Packet ipV4Packet = packet.get(IpV4Packet.class);
-                            if (ipV4Packet != null) {
-                                Inet4Address srcAddr = ipV4Packet.getHeader().getSrcAddr();
-                                System.out.println("Source IP Address: " + srcAddr);
-                            } else {
-                                System.out.println("Captured packet is not an IPv4 packet.");
+                                                packetDisplay.append("Captured Packet:\n");
+                                                packetDisplay.append("Source Address: " + srcAddr + "\n");
+                                                packetDisplay.append("Destination Address: " + dstAddr + "\n");
+                                                packetDisplay.append(packet.toString() + "\n\n");
+                                            } else {
+                                                packetDisplay.append("Captured a non-IPv4 packet:\n");
+                                                packetDisplay.append(packet.toString() + "\n\n");
+                                            }
+                                        });
+                                    } catch (Exception ex) {
+                                        packetDisplay.append("Error while capturing packets: " + ex.getMessage() + "\n");
+                                    }
+                                }
+                            } catch (Exception ex) {
+                                packetDisplay.append("Error while setting up packet capture: " + ex.getMessage() + "\n");
                             }
-                        } catch (Exception ex) {
-                            System.out.println("Error while analyzing packets: " + ex.getMessage());
-                        }
+                        }).start();
 
                     } else {
-                        System.out.println("Invalid interface IP");
-                        frame.setBackground(Color.RED);
+                        System.out.println("Wrong interface :(");
+                        frame.getContentPane().setBackground(Color.RED);
+                        packetDisplay.setText("Invalid network interface.");
                     }
-                } catch (Exception ex) {
-                    System.out.println("Error: " + ex.getMessage());
+                } catch (IOException | PcapNativeException exception) {
+                    System.out.println("Error:" + exception.getMessage());
+                    frame.getContentPane().setBackground(Color.RED);
+                    packetDisplay.setText("Error: " + exception.getMessage());
                 }
             }
         });
-
-        // Ensure the frame is properly laid out
-        frame.setVisible(true);
     }
 }
