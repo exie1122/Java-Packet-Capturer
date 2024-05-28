@@ -10,7 +10,7 @@ Macbook Pro
 Mac commands:
 ```bash
 cd /  [user] / Downloads  /  javanetworking-main
-java -jar "javanetworking .jar"
+sudo java -jar "javanetworking .jar"
 ```
 
 
