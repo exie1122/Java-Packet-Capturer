@@ -4,10 +4,15 @@ Requires sudo
 2024-05-27 Tested on Pi 3b+ with monitor mode on, but should work without monitor mode.
 
 sudo apt-get update
+
 sudo apt-get install git
+
 git clone https://github.com/exie1122/javanetworking.git
+
 cd javanetworking/javanetworking-main
+
 sudo apt-get install default-jdk
+
 sudo java -jar "/home/pi/javanetworking/javanetworking-main/javanetworking .jar"
 
 
