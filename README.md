@@ -2,8 +2,9 @@ Simple Packet Capturer Made in Java, with PCAP4J.
 
 Requires sudo 
 
-2024-05-27 Tested on Pi 3b+ with monitor mode on, but should work without monitor mode.
-Will test on macbook later 
+2024-05-27 
+Tested on Pi 3b+ with monitor mode on.
+Will test on Macbook + Windows later.
 
 
 
