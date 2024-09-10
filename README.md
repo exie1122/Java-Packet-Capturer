@@ -27,7 +27,11 @@ cd javanetworking/javanetworking-main
 
 sudo apt-get install default-jdk
 
-sudo java -jar "/home/pi/javanetworking/javanetworking-main/javanetworking .jar"
+cd javanetworking/
+
+mv 'javanetworking .jar' javanetworking.jar
+
+sudo java -jar javanetworking.jar
 ```
 
 
