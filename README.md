@@ -5,6 +5,7 @@ Requires sudo
 2024-05-27 
 Tested on:
 Raspberry pi 3B+ 
+Raspberry pi 4
 Macbook Pro
 
 Mac commands:
