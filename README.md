@@ -23,7 +23,7 @@ sudo apt-get install git
 
 git clone https://github.com/exie1122/javanetworking.git
 
-cd javanetworking/javanetworking-main
+cd javanetworking/
 
 sudo apt-get install default-jdk
 
